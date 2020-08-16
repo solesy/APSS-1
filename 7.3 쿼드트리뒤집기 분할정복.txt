@@ -1,0 +1,14 @@
+string reverse(string::iterator& it) {
+	char head = *it;
+	++it;
+	//기저사례
+	if (head == 'b' || head == 'w')
+		return string(1, head);
+	//devide
+	string upperLeft = reverse(it);
+	string upperRight = reverse(it);
+	string lowerLeft = reverse(it);
+	string lowerRight = reverse(it);
+	//merge
+	return string("x") + lowerLeft + lowerRight + upperLeft + upperRight;
+}

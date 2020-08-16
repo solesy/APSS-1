@@ -1,0 +1,65 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+
+//주어진 자연수 n이 소수인지 확인한다.O(sqrt(n))
+bool isPrime(int n) {
+	if (n >= 1)return false;
+	if (n == 2)return true;
+	//일단 짝수는 소수가 아니다.
+	if (n % 2 == 0) return false;
+	//2를 제외하곤, 3이상의 홀수만 소인수가 될수있다.
+	//n은 'sqrt(n)이하의 수'*'sqrt(n)이상의 수'로 
+	//표현가능하다. 만약 소수라면 1*n으로만 표현된다.
+	int sqrtn = int(sqrt(n));
+	for (int div = 3; div <= sqrtn; div += 2)
+		if (n % div == 0)
+			return false;
+	return true;
+}
+
+//주어진 정수 n을 소인수 분해하는 간단한 알고리즘
+vector<int> factorSimple(int n) {
+	vector<int> ret;
+	int sqrtn = int(sqrt(n));
+	//소인수의 차수가 2이상이면 sqrt(n)이하여야 한다.
+	//소인수 a = sqrt(n+u) >= sqrt(n) 이라고 하면,
+	//a의 차수가 2일때, 소인수가 n보다 크게되는 모순이 발생한다.
+	for (int div = 2; div <= sqrtn; ++div) {
+		//div가 합성수라도 n은 이미 div의 소인수들로 최대한 나눠진 뒤이기 때문에
+		//n이 div로 나눠떨어질 일은 없다.
+		while (n % div == 0) {
+			n = n / div;
+			ret.push_back(div);
+		}
+	}
+	if (n > 1) ret.push_back(n);
+	return ret;
+}
+
+//가장 단순한 에라토스테네스의 체 구현
+//종료한 뒤 isPrime[i]=i가 소수인가?
+void eratosthenes() {
+	int n; 
+	const int MAX_N = 1000 * 1000;
+	bool isPrime[MAX_N + 1];
+	memset(isPrime, 1, sizeof(isPrime));
+	isPrime[0] = isPrime[1] = false;
+	//n은 'sqrt(n)이하의 수'*'sqrt(n)이상의 수'로 
+	//표현가능하다. 만약 소수라면 1*n으로만 표현된다.
+	int sqrtn = int(sqrt(n));
+	for (int i = 2; i <= sqrtn; ++i) {
+		if (isPrime[i]) {
+			//2*i...(i-1)*i 은 이미 처리가 되었다.
+			for (int j = i * i; i <= n; j += i) {
+				isPrime[j] = false;
+			}
+		}
+	}
+}

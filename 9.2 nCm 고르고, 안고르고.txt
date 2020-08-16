@@ -1,0 +1,27 @@
+void pick2(int n, vector<int>& picked, int cur, int toPick) {
+	//기저사례:cur=n, toPick=0
+	if (cur == n) {
+		if (toPick == 0) {
+			for (int i = 0; i < picked.size(); ++i) {
+				printf("%d ", picked[i]);
+			}
+			printf("\n");
+		}
+		return;
+	}
+	//cur을 고르고 -> 재귀호출 -> cur을 안고르고 -> 재귀호출
+	picked.push_back(cur);
+	pick2(n, picked, cur + 1, toPick - 1);
+	picked.pop_back();
+	pick2(n, picked, cur + 1, toPick);
+}
+
+int main(void) {
+	//n: 전체원소의 수
+	//picked: 지금까지 고른 원소들의 번호
+	//toPick: 더 고를 원소의 수
+	//앞으로 toPick개의 원소를 고르는 모든 방법을 출력한다.
+	vector<int> picked;
+	printf("\n\n\n\n\n");
+	pick2(7, picked, 0, 4);
+}

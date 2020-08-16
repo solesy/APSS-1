@@ -1,0 +1,18 @@
+int n, d, p, q;
+//deg[i] = 마을 i와 연결된 마을의 개수
+double cache[51][101];
+int connected[51][51], deg[51];
+//days일째에 here번 마을에 숨어 있다고 가정하고
+//마지막 날에 q번 마을에 숨어 있을 조건부 확률을 반환한다.
+double search(int here,int days) {
+	//기저 : d일이 지난 경우
+	if (days == d) return (here == q ? 1.0 : 0.0);
+	//memoization
+	double& ret = cache[here][days];
+	if (ret != -1) return ret;
+	ret = 0.0;
+	for (int there = 0; there < n; ++there)
+		if (connected[here][there])
+			ret = ret + search(there, days - 1) / deg[here];
+	return ret;
+}

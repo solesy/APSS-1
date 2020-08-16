@@ -1,0 +1,36 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+//mask에 속한 원소들의 개수를 반환한다.
+int getSize(int mask) {
+	if (mask == 0) return 0;
+	//2진법에서 %2를 하면 최하위비트가 켜져있으면 1, 아니면 0이다.
+	return mask % 2 + (mask / 2);
+}
+//mask에 속한 원소들의 합을 반환한다.
+int getSum(int mask) {
+	int ret = 0;
+	for (int i = 1; i <= 9; ++i)
+		if (mask & (1 << i)) ret += i;
+	return ret;
+}
+int candidates[10][46][1024];
+//candidates미리 계산해둔다.
+void generateCandidate() {
+	memset(candidates, 0, sizeof(candidates));
+	//1~9의 부분집합을 전부 생성한다.
+	for (int set = 0; set < 1024; set += 2) {
+		const int l = getSize(set), s = getSum(set);
+		//set의 모든 부분 집합에 대해 candidates 기록
+		for (int subset = set; subset; subset = (subset - 1) & set) {
+			//사용된 known은 set에서 뺀다.
+			candidates[l][s][subset] |= set & (~subset);
+		}
+	}
+}

@@ -1,0 +1,42 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+int n;
+const int MAX_N = 1000 * 1000;
+//minFactor[i]=i의 가장 작은 소인수(i가 소수인 경우 자기 자신)
+int minFactor[MAX_N];
+//n/=minFactor[n]를 반복하면서 소인수 분해를 하는 전략.
+//여러번 소인수 분해를 해야할때 유리하다.
+//에라토스테네스의 체를 수행하면서 소인수분해를 위한 정보(minFactor)도 저장한다.
+void eratosthenes2() {
+	minFactor[0] = minFactor[1] = -1;
+	//모든 숫자를 소수로 표시해둔다.
+	for (int i = 2; i <= n; ++i)
+		minFactor[i] = i;
+	//에라토스테네스의 체를 수행한다.
+	int sqrtn = int(sqrt(n));
+	for (int i = 2; i <= sqrtn; ++i) {
+		//i가 소수일 경우
+		if (minFactor[i] == i) {
+			for (int j = i * i; j <= n; j += i)
+				//아직 방문한적 없는 경우에만 기록한다.
+				if (minFactor[j] == j)
+					minFactor[j] = i;
+		}
+	}
+}
+//2이상의 자연수 n을 소인수분해한 결과를 반환한다.
+vector<int> factor(int n) {
+	vector<int> ret;
+	while (n > 1) {
+		n /= minFactor[n];
+		ret.push_back(minFactor[n]);
+	}
+	return ret;
+}

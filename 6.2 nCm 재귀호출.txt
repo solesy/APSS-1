@@ -1,0 +1,31 @@
+using namespace std;
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+//reference사용하면 공간 절약
+void pick(int n, vector<int>& picked, int toPick) {
+	if (toPick == 0) {
+		for (int i = 0; i < picked.size(); i++) {
+			printf("%d ", picked[i]);
+		}
+		printf("\n");
+		return; 
+	}
+	//고를 수 있는 가장 작은 번호를 계산한다.
+	int smallest = picked.empty() ? 0 : picked.back() + 1;
+	//원소를 하나 고르고 -> 재귀호출 -> 백터 비우고 ->반복
+	for (int next = smallest; next < n; ++next) {
+		//push_back 쓰면 공간생김
+		picked.push_back(next);
+		pick(n, picked, toPick - 1);
+		picked.pop_back();
+	}
+}
+int main(void) {
+	//n: 전체원소의 수
+	//picked: 지금까지 고른 원소들의 번호
+	//toPick: 더 고를 원소의 수
+	//앞으로 toPick개의 원소를 고르는 모든 방법을 출력한다.
+	vector<int> picked;
+	pick(7, picked, 4);
+}

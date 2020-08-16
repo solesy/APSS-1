@@ -1,0 +1,24 @@
+int solve(int left, int right) {
+	//기저사례 : 판자가 하나뿐
+	if (left == right) return h[left];
+	//[left,mid][mid+1,right] 두 구간으로 문제를 분할
+	int mid = (left + right) / 2;
+	//부분문제1,2
+	int ret = max(solve(left, mid), solve(mid + 1, right));
+	//부분문제3:두 부분에 겹쳐있는 것중 가장 큰것
+	int lo = mid, high = mid + 1;
+	int height = min(h[lo], h[high]);
+	ret = max(ret, (high - lo + 1) * height);
+	while (left<lo || high<right) {
+		if (high < right && (lo == left || h[lo - 1] < h[high + 1])) {
+			++high;
+			height = min(height, h[high]);
+		}
+		else {
+			--lo;
+			height = min(height, h[lo]);
+		}
+		ret = max(ret, (high - lo + 1) * height);
+	}
+	return ret;
+}

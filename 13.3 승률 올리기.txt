@@ -1,0 +1,30 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+int g, w;
+//x번 게임을 더 이겨 승률이 1%이상 늘어나는가?
+bool decision(int x) {
+	int r = w * 100 / g;
+	g += x, w += x;
+	int nr = w * 100 / g;
+	return nr > r;
+}
+int optimize() {
+	//반복문 불변식: !decision(lo)&&decision(hi)
+	int lo = 0, hi = 2000000000;
+	if (!decision(hi)) return -1;
+	for (int iter = 0; iter < 100; ++iter) {
+		int mid = (lo + hi) / 2;
+		if (decision(mid))
+			hi = mid;
+		else
+			lo = mid;
+	}
+	return hi;
+}

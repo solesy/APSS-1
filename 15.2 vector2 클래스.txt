@@ -1,0 +1,90 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+#include<cmath>
+using namespace std;
+const double PI = 2 * acos(0.0);
+//2차원 벡터를 표현한다.
+struct vector2 {
+	double x, y;
+	//생성자를 explicit으로 지정하면 vector2를 넣을 곳에 잘못해
+	//실수가 들어가는 일을 방지해준다.
+	explicit vector2(double x_=0,double y_=0):x(x_),y(y_){}
+	//두 벡터의 비교
+	bool operator==(const vector2& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
+	//수학적으로 의미없는 연산
+	bool operator<(const vector2& rhs) const {
+		return x != rhs.x ? x < rhs.x : y < rhs.y;
+	}
+	//덧셈 뺄셈
+	vector2 operator+(const vector2& rhs) const {
+		return vector2(x + rhs.x, y + rhs.y);
+	}
+	vector2 operator-(const vector2& rhs) const {
+		return vector2(x - rhs.x, y - rhs.y);
+	}
+	//실수배
+	vector2 operator*(double rhs) const {
+		return vector2(x * rhs, y * rhs);
+	}
+	//벡터의 길이를 반환한다.
+	double norm() const { 
+		return hypot(x, y); 
+	}
+	//unit vector을 반환한다.
+	vector2 normalize() const {
+		return vector2(x / norm(), y / norm());
+	}
+	//x축의 양의 방향으로부터 이 벡터까지의 동경(<2pi)
+	double polar()const { 
+		return fmod(atan2(y, x) + 2 * PI, 2 * PI); 
+	}
+	//내적/외적의 구현
+	double dot(const vector2& rhs) const {
+		return x * rhs.x + y * rhs.y;
+	}
+	double cross(const vector2& rhs) const {
+		return x * rhs.y - y * rhs.x;
+	}
+	//이 벡터를 rhs위로 사영한 결과
+	vector2 project(const vector2& rhs) const {
+		vector2 r = rhs.normalize();
+		//연산자 오버로드*
+		//|this|cos()*r
+		return r * (r.dot(*this));
+	}
+};
+//원점에서 벡터 b가 벡터 a의 반시계 방향이면 양수, 시계 방향이면 음수,
+//평행이면 0을 반환한다.
+double ccw(vector2 a, vector2 b) {
+	return a.cross(b);
+}
+double ccw(vector2 p, vector2 a, vector2 b) {
+	return ccw(a - p, b - p);
+}
+//직선(a,b)와 직선(c,d)의 교점을 x에 반환한다.
+//교차하지 않으면 false를 반환한다.
+//p(x,y)=a+td 이용
+bool lineIntersection(vector2 a, vector2 b, vector2 c, vector2 d, vector2& x) {
+	double det = (b - a).cross(d - c);
+	//두 선이 평행인경우(det은 두 방향백터의 외적)
+	if (fabs(det) < DBL_EPSILON) return false;
+	det = (c - a).cross(d - c) / det;
+	x = a + (b - a) * det;
+	return true;
+}
+//점 p에서 (a,b)직선에 내린 수선의 발을 구한다.
+vector2 perpendicularFoot(vector2 p, vector2 a, vector2 b) {
+	return a + (p - a).project(b - a);
+}
+//점 p와 (a,b)직선 사이의 거리를 구한다.
+double pointToLine(vector2 p, vector2 a, vector2 b) {
+	return (p - perpendicularFoot(p, a, b)).norm();
+}

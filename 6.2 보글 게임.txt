@@ -1,0 +1,38 @@
+using namespace std;
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+const int dx[8] = { -1,-1,-1,1,1,1,0,0 };
+const int dy[8] = { -1,0,1,-1,0,1,-1,1 };
+const char board[5][5] = {
+	{'U','R','L','P','M'},
+	{'X','P','R','E','T'},
+	{'G','I','A','E','T'},
+	{'X','T','N','Z','Y'},
+	{'X','O','Q','R','S'}
+};
+//5x5의 보글 게임 판의 해당 위치에서 주어진 단어가 시작하는지를 반환
+bool inRange(int y, int x) {
+	if (y > 4 || y < 0 || x>4 || x < 0)
+		return false;
+	else
+		return true;
+}
+bool hasWord(int y, int x, const string& word) {
+	if (!inRange(y, x))
+		return false;
+	if (board[y][x] != word[0])
+		return false;
+	//기저사례3:단어길이가 1이면 성공
+	if (board[y][x] == word[0] && word.size() == 1)
+		return true;
+	for (int direction = 0; direction < 8; ++direction) {
+		int nextY = y + dy[direction], nextX = x + dx[direction];
+		if (hasWord(nextY, nextX, word.substr(1)))
+			return true;
+	}
+}
+int main(void) {
+	if (hasWord(1, 2, "REAPEAT"))
+		printf("true");
+}

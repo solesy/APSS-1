@@ -1,0 +1,24 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+using namespace std;
+const int MAX_N = 10000;
+int n, e[MAX_N], m[MAX_N];
+int heat() {
+	//e를 내림차순으로 정렬
+	vector<pair<int, int>> order;
+	for (int i = 0; i < n; ++i)
+		order.push_back(make_pair(-e[i], i));
+	sort(order.begin(), order.end());
+	//e가 큰 순서대로 데운다.
+	int ret = 0, beginEat = 0;
+	for (int i = 0; i < n; ++i) {
+		int box = order[i].second;
+		beginEat += m[box];
+		ret = max(ret, beginEat + e[box]);
+	}
+	return ret;
+}

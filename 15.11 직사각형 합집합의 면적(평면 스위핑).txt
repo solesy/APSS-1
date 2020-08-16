@@ -1,0 +1,41 @@
+//직사각형들의 면적을 계산한다.
+int unionArea(const vector<Rectangle>& rects) {
+	if (rects.empty()) return 0;
+	//이벤트 정보:x좌표, <왼쪽인가 오른쪽인가, 사각형의 번호>
+	typedef pair<int, pair<int, int>> Event;
+	vector<Event> events;
+	vector<int> ys;
+	//각 사각형을 순회하면서 y좌표의 모음과 이벤트의 집합을 찾는다.
+	for (int i = 0; i < rects.size(); ++i) {
+		//y좌표의 모음
+		ys.push_back(rects[i].y1);
+		ys.push_back(rects[i].y2);
+		//이벤트의 집합
+		events.push_back(Event(rects[i].x1, make_pair(1, i)));
+		events.push_back(Event(rects[i].x2, make_pair(-1, i)));
+	}
+	sort(ys.begin(), ys.end());
+	ys.erase(unique(ys.begin(), ys.end()));
+	int ret = 0;
+	//count[i]: 현재의 이벤트 구간에서, ys[i]~ys[i+1] 구간에 겹쳐진 사각형의 수
+	vector<int> count(ys.size() - 1, 0);
+	for (int i = 0; i < events.size(); ++i) {
+		//x: events의 x좌표, delta: 왼쪽=1 오른쪽 -1, rectangle: 사각형의 번호
+		int x = events[i].first, delta = events[i].second.first;
+		int rectangle = events[i].second.second;
+		//현재의 이벤트에 맞는 count[]를 갱신
+		int y1 = rects[rectangle].y1, y2 = rects[rectangle].y2;
+		//사각형이 끝날때, events[i]~events[i+1]에선 i-1까진 영향을 미쳤던 사각형 하나가 사라진다.
+		for (int j = 0; j < ys.size(); ++j)
+			if (y1 <= ys[j] && ys[j] < y2)
+				count[j] += delta;
+		//cutLength()를 계산한다.
+		int cutLength = 0;
+		for (int j = 0; j < ys.size() - 1; ++j)
+			if (count[j] > 0)
+				cutLength += ys[j + 1] - ys[j];
+		if (i + 1 < events.size())
+			ret += cutLength * (events[i + 1].first - x);
+	}
+	return ret;
+}

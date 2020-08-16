@@ -1,0 +1,35 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+int n, k;
+int r[1000], c[1000];
+bool decision(int x) {
+	//모든 x*c-r을 구하고 정렬해서 v에 저장한다.
+	vector<double> v;
+	for (int j = 0; j < n; ++j)
+		v.push_back(x * c[j] - r[j]);
+	sort(v.begin(), v.end());
+	//[n-k,n) 까지의 합이 0보다 큰지를 확인한다.
+	double sum = 0;
+	for (int i = n - k; i < n; ++i)
+		sum += v[i];
+	return sum >= 0;
+}
+double optimize() {
+	//-1e-9는 왜설정하는지 모르겠다. 이분법에서 알아보기.
+	double lo = -1e-9, hi = 1;
+	for (int iter = 0; iter < 100; iter++) {
+		double mid = (lo + hi) / 2;
+		if (decision(mid))
+			hi = mid;
+		else
+			lo = mid;
+	}
+	return hi;
+}

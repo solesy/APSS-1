@@ -1,0 +1,89 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+//다항식 p의 계수가 주어질 때 미분한 결과 p'의 계수를 반환한다.
+vector<double> differentiate(const vector<double>& poly) {
+	int n = poly.size() - 1;
+	vector<double> result;
+	//미분
+	//ax^2=0 에서 2*a, 0 가 result에 저장된다,
+	for (int i = 0; i < n; ++i)
+		result.push_back((n - i) * poly[i]);
+	return result;
+}
+//1차 혹은 2차 방정식을 푼다.
+vector<double> solveNaive(const vector<double>& poly) {
+	int n = poly.size();
+	vector<double> result;
+	switch (n) 
+	{
+	case 2:
+		//1차방정식의 경우
+		result.push_back(-poly[1] / poly[0]);
+		break;
+	case 3:
+		//2차방정식의 경우
+		//근의 공식 사용
+		double a = poly[0], b = poly[1], c = poly[2];
+		result.push_back((-b + (sqrt(b * b - 4 * a * c))) / 2 * a);
+		result.push_back((-b - (sqrt(b * b - 4 * a * c))) / 2 * a);
+	}
+	sort(result.begin(), result.end());
+	return result;
+}
+//다항식의 계수 poly가 주어질 때, f(x0)을 반환한다.
+double evaluate(const vector<double>& poly, double x0) {
+	int n = poly.size();
+	double result = 0;
+	//대입
+	for (int i = 0; i < n; ++i)
+		result += poly[i] * pow(x0, n - i);
+	return result;
+}
+//방정식의 해는 L의 절대값 범위에 존재한다.
+const double L = 25;
+//방정식의 근을 반환한다.
+vector<double>solve(const vector<double>& poly) {
+	int n = poly.size() - 1;
+	//기저: 1,2차 방정식을 푼다.
+	if (n <= 2) return solveNaive(poly);
+	//방정식을 미분해서 n-1차 방정식을 얻고
+	vector<double> derivative = differentiate(poly);
+	//n-1차 방정식의 해를 반환한 답을 sols에 저장한다.
+	vector<double> sols = solve(derivative);
+	//sols는 poly의 극점 x좌표를 나타내고,
+	//극점사이를 하나하나 검사하며 답이 있나 확인한다.
+	sols.insert(sols.begin(), -L - 1);
+	sols.insert(sols.end(), L + 1);
+	vector<double> ret;
+	for (int i = 0; i + 1 < sols.size(); ++i) {
+		double x1 = sols[i], x2 = sols[i + 1];
+		double y1 = evaluate(poly, x1), y2 = evaluate(poly, x2);
+		//y1과 y2의 부호가 같은 경우 답은 없다.
+		if (y1 * y2 > 0) continue;
+		//반복문 불변식:f(x1)<=0<f(x2)
+		if (y1 > y2) { swap(y1, y2); swap(x1, x2); }
+		//이분법
+		for (int iter = 0; iter < 100; ++iter) {
+			double midx = (x1 + x2) / 2;
+			double midy = evaluate(poly, midx);
+			if (midy < 0) {
+				y1 = midy;
+				x1 = midx;
+			}
+			else {
+				y2 = midy;
+				x2 = midx;
+			}
+		}
+		ret.push_back((x1 + x2) / 2);
+	}
+	sort(ret.begin(), ret.end());
+	return ret;
+}

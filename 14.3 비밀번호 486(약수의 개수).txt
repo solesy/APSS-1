@@ -1,0 +1,46 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+using namespace std;
+//TM까지의 수 가운데, n개의 약수를 가진 수의 개수를 구하라.
+//factor(n)=factor(n/minFactor(n)) * (minFactorPower(n)+1)/minFactorPower(n)
+const int TM = 1000 * 1000 * 10;
+//minFactor[i]: i의 최소 소인수(소수인 경우 자기자신)
+int minFactor[TM + 1];
+//minFactorPower[i]: i의 최소 소인수의 차수
+int minFactorPower[TM + 1];
+//factor[i]: i가 가진 약수의 개수
+int factor[TM + 1];
+//minFactor을 에라토스테네스의 체를 이용하여 구한다.
+void eratosthenes() {
+	minFactor[0] = minFactor[1] = -1;
+	for (int i = 2; i <= TM; ++i)
+		minFactor[i] = i;
+	int sqrttm = sqrt(TM);
+	for (int i = 2; i <= sqrttm; ++i) {
+		if (minFactor[i] == i) {
+			for (int j = i * i; j <= TM; j += i)
+				if (minFactor[j] == j)
+					minFactor[j] = i;
+		}
+	}
+}
+void getFactorSmart() {
+	//minFactor[i]초기화
+	eratosthenes();
+	factor[0] = factor[1] = 1;
+	minFactorPower[0] = minFactorPower[1] = 1;
+	for (int n = 2; n <= TM; ++n) {
+		//n의 최소소인수의 차수가 1일경우
+		if (minFactor[n] != minFactor[n / minFactor[n]])
+			minFactorPower[n] = 1;
+		else
+			minFactorPower[n] = minFactorPower[n / minFactor[n]] + 1;
+		factor[n] = factor[n / minFactor[n]] * (minFactorPower[n] + 1) / minFactorPower[n];
+	}
+}

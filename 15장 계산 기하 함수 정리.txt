@@ -1,0 +1,263 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<cassert>
+#include<queue>
+#include<memory.h>
+#include<cmath>
+using namespace std;
+const double PI = 2 * acos(0.0);
+//2차원 벡터를 표현한다.
+struct vector2 {
+	double x, y;
+	//생성자를 explicit으로 지정하면 vector2를 넣을 곳에 잘못해
+	//실수가 들어가는 일을 방지해준다.
+	explicit vector2(double x_=0,double y_=0):x(x_),y(y_){}
+	//두 벡터의 비교
+	bool operator==(const vector2& rhs) const {
+		return x == rhs.x && y == rhs.y;
+	}
+	//수학적으로 의미없는 연산
+	//x좌표의 크기 비교
+	bool operator<(const vector2& rhs) const {
+		return x != rhs.x ? x < rhs.x : y < rhs.y;
+	}
+	//덧셈 뺄셈
+	vector2 operator+(const vector2& rhs) const {
+		return vector2(x + rhs.x, y + rhs.y);
+	}
+	vector2 operator-(const vector2& rhs) const {
+		return vector2(x - rhs.x, y - rhs.y);
+	}
+	//실수배
+	vector2 operator*(double rhs) const {
+		return vector2(x * rhs, y * rhs);
+	}
+	//벡터의 길이를 반환한다.
+	double norm() const { 
+		return hypot(x, y); 
+	}
+	//unit vector을 반환한다.
+	vector2 normalize() const {
+		return vector2(x / norm(), y / norm());
+	}
+	//x축의 양의 방향으로부터 이 벡터까지의 동경(<2pi)
+	double polar()const { 
+		return fmod(atan2(y, x) + 2 * PI, 2 * PI); 
+	}
+	//내적/외적의 구현
+	double dot(const vector2& rhs) const {
+		return x * rhs.x + y * rhs.y;
+	}
+	double cross(const vector2& rhs) const {
+		return x * rhs.y - y * rhs.x;
+	}
+	//이 벡터를 rhs위로 사영한 결과
+	vector2 project(const vector2& rhs) const {
+		vector2 r = rhs.normalize();
+		//연산자 오버로드*
+		//|this|cos()*r
+		return r * (r.dot(*this));
+	}
+};
+//원점에서 벡터 b가 벡터 a의 반시계 방향이면 양수, 시계 방향이면 음수,
+//평행이면 0을 반환한다.
+double ccw(vector2 a, vector2 b) {
+	return a.cross(b);
+}
+double ccw(vector2 p, vector2 a, vector2 b) {
+	return ccw(a - p, b - p);
+}
+//점 p에서 (a,b)직선에 내린 수선의 발을 구한다.
+vector2 perpendicularFoot(vector2 p, vector2 a, vector2 b) {
+	return a + (p - a).project(b - a);
+}
+//점 p와 (a,b)직선 사이의 거리를 구한다.
+double pointToLine(vector2 p, vector2 a, vector2 b) {
+	return (p - perpendicularFoot(p, a, b)).norm();
+}
+//직선(a,b)와 직선(c,d)의 교점을 x에 반환한다.
+//교차하지 않으면 false를 반환한다.
+//p(x,y)=a+td 이용
+bool lineIntersection(vector2 a, vector2 b, vector2 c, vector2 d, vector2& x) {
+	double det = (b - a).cross(d - c);
+	//두 선이 평행인경우(det은 두 방향백터의 외적)
+	if (fabs(det) < DBL_EPSILON) return false;
+	det = (c - a).cross(d - c) / det;
+	x = a + (b - a) * det;
+	return true;
+}
+//(a,b)//(c,d)일때 한점에서 겹치는지 확인한다.
+bool parallelSegments(vector2 a, vector2 b, vector2 c, vector2 d, vector2& p) {
+	if (b < a) swap(a, b);
+	if (d < c) swap(c, d);
+	if (ccw(a, b, c) != 0 || b < c || d < a) return false;
+	if (a < c) p = c; else p = a;
+	return true;
+}
+//p가 (a,b)를 감싸면서 각 변이 x,y축에 평행한 최소 사각형 내부에 있는지 확인한다.
+//a,b,p 는 일직선 상에 있다고 가정한다.
+bool inBoundingRectangle(vector2 p, vector2 a, vector2 b) {
+	if (b < a) swap(a, b);
+	return p == a || p == b || (a < p&& p < b);
+}
+//(a,b)와 (c,d)선분의 교점을 p에 반환한다.
+//교점이 여러개일경우 아무거나 반환한다.
+//두 선분이 교차하지 않을 경우 false를 반환한다.
+bool segmentIntersection(vector2 a, vector2 b, vector2 c, vector2 d, vector2& p) {
+	//평행한경우 예외처리
+	if (!lineIntersection(a, b, c, d, p))//p배정
+		return parallelSegments(a, b, c, d, p);
+	return inBoundingRectangle(p, a, b) && inBoundingRectangle(p, c, d);
+}
+//교차점은 알필요없고 접촉여부만 반환한다.
+bool segmentIntersects(vector2 a, vector2 b, vector2 c, vector2 d) {
+	double ab = ccw(a, b, c) * ccw(a, b, d);
+	double cd = ccw(c, d, a) * ccw(c, d, b);
+	//두 선분이 평행할때
+	if (ab == 0 && cd == 0) {
+		if (b < a)swap(a, b);
+		if (d < c) swap(c, d);
+		return !(b < c || d < a);
+	}
+	return ab <= 0 && cd <= 0;
+}
+//점 q가 다각형 p 안에 포함되어 있을 경우 참, 아닌 경우 거짓을 반환한다.
+//q가 다각형의 경계 위에 있는 경우의 반환값은 정의되어있지 않다.
+bool isInside(vector2 q, const vector<vector2>& p) {
+	//오른쪽반직선이 홀수번 교차하면 내부, 짝수면 외부
+	int crosses = 0;
+	for (int i = 0; i < p.size(); ++i) {
+		int j = (i + 1) % p.size();
+		//p[i],p[j]가 반직선을 가로지르는가?
+		if ((p[i].y > q.y) != (p[j].y > q.y)) {
+			double atX = (p[i].x - p[j].x) / (p[i].y - p[j].y) * (q.y - p[i].y) + p[i].x;
+			if (q.x < atX)
+				++crosses;
+		}
+	}
+	return crosses % 2 > 0;
+}
+typedef vector<vector2> polygon;
+//points에 있는 점들을 모두 포함하는 최소의 볼록다각형을 찾는다(convex hull)
+//볼록다각형이라 가장 왼쪽에 있는 벡터가 유일하게 정의된다.
+polygon girfWrap(const vector<vector2>& points) {
+	int n = points.size();
+	polygon hull;
+	//가장 왼쪽(아래)점은 볼록껍질에 반드시 포함되므로 첫빠따의 자격이있따.
+	vector2 pivot = *min_element(points.begin(), points.end());
+	hull.push_back(pivot);
+	while (true) {
+		//ph에서 시작하는 벡터가 가장 왼쪽인 점 next를 찾는다.
+		//여러개 있으면 가장 먼 것을 선택한다.
+		vector2 ph = hull.back(), next = points[0];
+		for (int i = 1; i < n; ++i) {
+			double cross = ccw(ph, next, points[i]);//양수면 next보다 points[i]가 더 왼쪽에 있다.
+			double dist = (next - ph).norm() - (points[i] - ph).norm();//음수면 points[i]가 더 멀다.
+			if (cross > 0 || (cross == 0 && dist < 0))
+				next = points[i];
+		}
+		if (next == pivot) break;
+		hull.push_back(next);
+	}
+	return hull;
+}
+//두 다각형이 겹치는지 여부를 반환한다.
+//한점이라도 겹쳐선 안되기 때문에 isInside만으로 답을 구할순 없다.
+bool polygonIntersects(const polygon& p, const polygon& q) {
+	int n = p.size(), m = q.size();
+	//완전포함관계인 경우 예외처리
+	if (isInside(p[0], q) || isInside(q[0], p)) return true;
+	//두 다각형이 서로 겹친다면 서로 닿는 두 변이 반드시 존재한다.
+	//각각의 두 변중 한점이라도 겹치면 true반환
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j)
+			if (segmentIntersects(p[i], p[(i + 1) % n], q[j], q[(j + 1) % m]))
+				return true;
+	}
+	return false;
+}
+//x1<x2,y1<y2
+struct Rectangle {
+	int x1, x2, y1, y2;
+};
+//직사각형들의 면적을 계산한다.
+int unionArea(const vector<Rectangle>& rects) {
+	if (rects.empty()) return 0;
+	//이벤트 정보:x좌표, <왼쪽인가 오른쪽인가, 사각형의 번호>
+	typedef pair<int, pair<int, int>> Event;
+	vector<Event> events;
+	vector<int> ys;
+	//각 사각형을 순회하면서 y좌표의 모음과 이벤트의 집합을 찾는다.
+	for (int i = 0; i < rects.size(); ++i) {
+		//y좌표의 모음
+		ys.push_back(rects[i].y1);
+		ys.push_back(rects[i].y2);
+		//이벤트의 집합
+		events.push_back(Event(rects[i].x1, make_pair(1, i)));
+		events.push_back(Event(rects[i].x2, make_pair(-1, i)));
+	}
+	sort(ys.begin(), ys.end());
+	ys.erase(unique(ys.begin(), ys.end()));
+	int ret = 0;
+	//count[i]: 현재의 이벤트 구간에서, ys[i]~ys[i+1] 구간에 겹쳐진 사각형의 수
+	vector<int> count(ys.size() - 1, 0);
+	for (int i = 0; i < events.size(); ++i) {
+		//x: events의 x좌표, delta: 왼쪽=1 오른쪽 -1, rectangle: 사각형의 번호
+		int x = events[i].first, delta = events[i].second.first;
+		int rectangle = events[i].second.second;
+		//현재의 이벤트에 맞는 count[]를 갱신
+		int y1 = rects[rectangle].y1, y2 = rects[rectangle].y2;
+		//사각형이 끝날때, events[i]~events[i+1]에선 i-1까진 영향을 미쳤던 사각형 하나가 사라진다.
+		for (int j = 0; j < ys.size(); ++j)
+			if (y1 <= ys[j] && ys[j] < y2)
+				count[j] += delta;
+		//cutLength()를 계산한다.
+		int cutLength = 0;
+		for (int j = 0; j < ys.size() - 1; ++j)
+			if (count[j] > 0)
+				cutLength += ys[j + 1] - ys[j];
+		if (i + 1 < events.size())
+			ret += cutLength * (events[i + 1].first - x);
+	}
+	return ret;
+}
+//시계방향으로 주어진 볼록 다각형에서 가장 먼 꼭지점 쌍 사이의 거리를 반환한다.
+double diameter(const polygon& p) {
+	int n = p.size();
+	//가장 왼쪽,오른쪽 점을 각각 찾는다.
+	int left = min_element(p.begin(), p.end()) - p.begin();
+	int right = min_element(p.begin(), p.end()) - p.begin();
+	//p[left], p[right]에 각각 수직선을 붙인다. 두 수직선은 반대방향으로 생각하고,
+	//A의 방향만을 표현하면 된다.
+	vector2 calipersA(0, 1);
+	double ret = (p[right] - p[left]).norm();
+	//toNext[i]: p[i]에서 다음점까지의 방향을 나타내는 단위 벡터
+	vector<vector2> toNext(n);
+	for (int i = 0; i < n; ++i)
+		toNext[i] = (p[(i + 1) % n] - p[i]).normalize;//p[i]p[i+1]시계반대방향
+	//a와 b는 각각 두 선분이 어디에 붙은 채로 회전하고 있는지를 나타낸다.(회전의 축)
+	int a = left, b = right;
+	//캘리퍼스를 반바퀴 돌린다.
+	//반바퀴 돌아서 두 선분이 서로 위치를 바꿀때까지 계속한다.
+	while (a != right || b != left) {
+		//a에서 다음점까지의 각도와 b에서 다음 점까지의 각도 중 어느쪽이 작은지 확인
+		double cosThetaA = calipersA.dot(toNext[a]);
+		double cosThetaB = -calipersA.dot(toNext[b]);
+		if (cosThetaA > cosThetaB) { //TeataA<TeataB
+			calipersA = toNext[a];
+			a = (a + 1) % n;
+		}
+		else {
+			calipersA = toNext[b];
+			b = (b + 1) % n;
+		}
+		ret = max(ret, (p[a] - p[b]).norm());
+	}
+	return ret;
+}
+int main(void) {
+	
+}

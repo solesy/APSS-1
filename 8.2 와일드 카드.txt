@@ -1,0 +1,22 @@
+//완전 탐색으로 구현
+bool match(const string& w, const string& s) {
+	//w[pos]와 s[pos]를 맞춰 나간다.
+	int pos = 0;
+	while (pos < w.size() && pos < s.size()) {
+		if (w[pos] == '?' || (w[pos] == s[pos]))
+			++pos;
+	}
+	//while문이 왜 종료되었는지 확인한다.
+	//w끝에 도달
+	if (pos == w.size())
+		return pos == s.size();//if else보다 간결
+	//w[pos]=='*'
+	if (w[pos] == '*') {
+		//post + skip = s.size()은 w의 남은 문자열이 전부 '*'일 때를 고려한 것이다.
+		for (int skip = 0; pos + skip <= s.size(); ++skip) {
+			if (match(w.substr(pos + 1), s.substr(pos + skip)))
+				return true;
+		}
+	}
+	return false;
+}

@@ -1,0 +1,19 @@
+char decompressed[20][20];
+void decompress(string::iterator& it, int y, int x, int size) {
+	//한 글자를 검사할 때마다 반복자를 한 칸 앞으로 옮긴다. ++가 뒤에오므로 head에 먼저 할당 후 증가시킨다.
+	char head = *(it++);
+	//기저사레 : w,b가 오는 경우
+	if (head == 'w' || head == 'b') {
+		for (int dy = 0; dy < size; ++dy)
+			for (int dx = 0; dx; ++dx)
+				decompressed[y + dy][x + dx] = head;
+	}
+	else {
+		//네 부분을 각각 순서대로 압축 해제
+		int half = size / 2;
+		decompress(it, y, x, half);
+		decompress(it, y, x + half, half);
+		decompress(it, y + half, x, half);
+		decompress(it, y + half, x + half, half);
+	}
+}

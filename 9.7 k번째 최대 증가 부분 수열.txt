@@ -1,0 +1,60 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+using namespace std;
+const int MAX = 2000000000 + 1;
+int n;
+int cacheLen[501], cacheCnt[501], S[500];
+//S[start]에서 시작하는 LIS 길이를 반환
+int lis(int start) {
+	int& ret = cacheLen[start + 1];
+	if (ret != -1) return ret;
+	ret = 1;
+	for (int next = start + 1; next < n; ++next)
+		if (start == -1 || S[next] > S[start])
+			ret = max(ret, lis(next) + 1);
+	return ret;
+}
+//S[start]에서 시작하는 LIS의 개수를 반환
+int count(int start) {
+	//기저:LIS의 길이가 1인 경우
+	if (lis(start) == 1)return 1;
+	int& ret = cacheCnt[start + 1];
+	if (ret != -1) return ret;
+	ret = 0;
+	for (int next = start + 1; next < n; ++next) {
+		if ((start == -1 || S[next] > S[start]) && lis(start) == lis(next) + 1)
+			//S[start]에서 시작하는 LIS의 수가 k의 최대값 보다 큰 경우
+			ret = min<long long>(MAX, (long long)ret + count(next));
+	}
+}
+//재귀함수로 S[start]에서 시작하는 LIS중 사전순으로 skip번 건너뛴 수열을
+//lis에 저장한다.
+void reconstruct(int start, int skip, vector<int>& list) {
+	//S[start]는 항상 list에 저장
+	if (start != -1) list.push_back(S[start]);
+	//next로 올수있는 pair(숫자,숫자의 위치) 목록
+	vector<pair<int, int>> followers;
+	for (int next = start + 1; next < n; ++next)
+		if ((start == -1 || S[start] < S[next]) && lis(start) == lis(next) + 1)
+			followers.push_back(make_pair(S[next], next));
+	sort(followers.begin(), followers.end());
+	//k번째 lis의 다음 숫자를 찾는다.
+	for (int i = 0; i < followers.size(); ++i) {
+		int idx = followers[i].second;
+		int cnt = count(idx);
+		if (cnt <= skip)
+			skip -= cnt;
+		else {
+			reconstruct(idx, skip, list);
+			//S[idx]만 고려하고 return
+			return;
+		}
+	}
+}
+int main(void) {
+	ios_base::sync_with_stdio(0);
+	cin.tie(0);
+	
+}

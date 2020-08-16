@@ -1,0 +1,34 @@
+int n, m, A[100], B[100];
+int cache[100][100];
+//더이상 이을 수 있는지의 여부 반환.
+bool sequence(int indexA, int indexB) {
+	int ret = false;
+	int maxElement = max(A[indexA], B[indexB]);
+	for (int i = indexA + 1; i < n; ++i)
+		if (maxElement < A[i])
+			ret = true;
+	for (int i = indexB + 1; i < m; ++i)
+		if (maxElement < B[i])
+			ret = true;
+	return ret;
+}
+//A[indexA] B[indexB] 가 jlis 시작을 이룰때,
+//jlis를 반환.
+int jlis(int indexA, int indexB) {
+	//기저 사례 : 더이상 이을 숫자가 존재하지 않는다.
+	//즉, A[nextA] B[nextB] 어디에도 max(A[indexA], b[indexB])보다 큰 값은 존재하지 않는다.
+	if (!sequence(indexA, indexB)) return 2;
+	int& ret = cache[indexA][indexB];
+	if (ret != -1) return ret;
+	ret = 2;
+	int maxElement = max(A[indexA], B[indexB]);
+	//nextA(>maxElement)와 indexB
+	for (int i = indexA + 1; i < n; ++i)
+		if (maxElement < A[i])
+			ret = max(ret, jlis(i, indexB) + 1);
+	//nextB(>maxElement)와 indexB
+	for (int i = indexB + 1; i < m; ++i)
+		if (maxElement < B[i])
+			ret = max(ret, jlis(indexA, i) + 1);
+	return ret;
+}

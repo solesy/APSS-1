@@ -1,0 +1,56 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+using namespace std;
+vector<int> sorted;
+//분할 정렬된 list의 병합
+void merge(vector<int>& list, int left, int mid, int right) {
+	//list에서 사용
+	int i = left;
+	int j = mid + 1;
+	//sorted에서 사용
+	int k = left;
+	while (i <= mid && j <= right) {
+		if (list[i] <= list[j])
+			sorted[k++] = list[i++];
+		else
+			sorted[k++] = list[j++];
+	}
+	//남아 있는 값들을 일괄 복사
+	if (i > mid) {
+		for (int l = j; l <= right; ++l) {
+			sorted[k++] = list[l];
+		}
+	}
+	else {
+		for (int l = i; l <= mid; l++)
+			sorted[k++] = list[l];
+	}
+	//sorted의 값을 list로 복사해야지만 병합할때가 성립
+	for (int l = left; l <= right; l++) {
+		list[l] = sorted[l];
+	}
+}
+void mergeSort(vector<int>& list, int left, int right) {
+	int mid;
+	//left == right 일때가 기저사례이다.
+	if (left < right) {
+		mid = (left + right) / 2;
+		mergeSort(list, left, mid);
+		mergeSort(list, mid + 1, right);
+		merge(list, left, mid, right);
+	}
+}
+int main(void) {
+	int n;
+	scanf("%d", &n);
+	vector<int> list(n);
+	sorted.assign(n, 0);
+	for (int i = 0; i < n; ++i) {
+		scanf("%d", &list[i]);
+	}
+	mergeSort(list, 0, n - 1);
+	for (int i = 0; i < n; i++)
+		printf("%d ", sorted[i]);
+}

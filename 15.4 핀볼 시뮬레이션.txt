@@ -1,0 +1,67 @@
+const double EPSILON = 1e-9;
+const double INF = 1e200;
+int n;
+vector2 center[50];
+int radius[50];
+//ax^2+2bx+c=0의 실근을 크기순서로 반환한다.
+vector<double> solve2(double a,double b,double c){
+	double d = b * b - a * c;
+	vector<double> ret;
+	if (d < 0) return ret;
+	else if (d == 0) {
+		ret.push_back(-b / a);
+		return ret;
+	}
+	//두개의 실근을 가지는 경우
+	ret.push_back((-b + sqrt(d)) / a);
+	ret.push_back((-b - sqrt(d)) / a);
+	return ret;
+}
+//현재 공의 중심 here, 입사방향벡터 dir일때,
+//장애물의 중심 center, 반지름 radius와 만나게 하는 t를 반환한다.
+//충돌하지 않을 경우 INF를 반환한다. 항상 양수만 반환한다.
+double hitCircle(vector2 here, vector2 dir, vector2 center, int radius) {
+	double a = dir.x * dir.x + dir.y * dir.y;
+	double b = (here.x - center.x) * dir.x + (here.y - center.y) * dir.y;
+	double c = (here.x - center.x) * (here.x - center.x) + (here.y - center.y) * (here.y - center.y)
+		- (radius + 1) * (radius + 1);
+	vector<double> sols = solve2(a, b, c);
+	if (sols.empty())return INF;
+	else if (sols.size() == 1 && sols[0] < EPSILON) return INF;
+	else if (sols.size() == 2 && sols[0] < EPSILON && sols[1] < EPSILON) return INF;
+	return sols[0];
+}
+//원래방향 dir, 장애물의 중심 center, 충돌 시 원의 중심 contact일때,
+//반사후, 새로운 공의 방향을 반환한다.
+vector2 reflect(vector2 dir, vector2 center, vector2 contact) {
+	//-dir을 contact-center에 정사영한 결과에 2를 곱한다.
+	vector2 d = dir.project(contact - center) * 2;
+	return (dir - d).normalize();
+}
+//공의 현재위치 here, 방향 dir이 주어질때, 최대 10번 충돌을 출력한다.
+void simulate(vector2 here, vector2 dir) {
+	//방향은 항상 단위벡터로 저장한다.
+	dir = dir.normalize();
+	int hitCount = 0;
+	while (hitCount < 10) {
+		//이번에 충돌할 장애물을 찾는다->출력->새로운 here,dir을 계산한다->반복
+		int circle = -1;
+		double t = INF * 0.5;
+		//n개의 장애물을 순회하면서, t의 최소일때의 circle을 출력한다.
+		for (int i = 0; i < n; ++i) {
+			double cand = hitCircle(here, dir, center[i], radius[i]);
+			if (cand < t) {
+				t = cand;
+				circle = i;
+			}
+		}
+		//충돌할 장애물이 없다.
+		if (circle == -1) break;
+		printf("%d ", circle);
+		//공의 새 위치를 계산한다.
+		vector2 contact = here + dir * t;
+		here = contact;
+		dir = reflect(dir, center[circle], contact);
+	}
+	cout << endl;
+}

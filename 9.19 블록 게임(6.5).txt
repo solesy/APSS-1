@@ -1,0 +1,51 @@
+#include<iostream>
+#include<stdio.h>
+#include<vector>
+#include<algorithm>
+#include<cassert>
+using namespace std;
+//방향과 위치를 나타내는 모든 단위블록의 비트들의 조합
+vector<int> moves;
+inline int cell(int y, int x) { return 1 << (y * 5 + x); }
+//moves 계산
+void precalc() {
+	//세칸짜리 계산
+	for (int y = 0; y < 4; ++y)
+		for (int x = 0; x < 4; ++x) {
+			vector<int> cells;
+			for (int dy = 0; dy < 2; ++dy)
+				for (int dx = 0; dx < 2; ++dx)
+					cells.push_back(cell(y + dy, x + dx));
+			int square = cells[0] + cells[1] + cells[2] + cells[3];
+			for (int i = 0; i < 4; ++i)
+				moves.push_back(square - cells[i]);
+		}
+	//두칸짜리 계산
+	for(int i=0;i<5;++i)
+		for (int j = 0; j < 4; ++j) {
+			moves.push_back(cell(i, j) + cell(i, j + 1));
+			moves.push_back(cell(j, i) + cell(j + 1, i));
+		}
+}
+//int 사용하면 메모리초과
+//2^25가지의 보드판의 상황
+//1이면 이김, 0이면 짐, -1이면 아직 고려되지 않음.
+char cache[1 << 25];
+//board상황일때 현재 차례인 사람이 승리할지 여부를 반환한다.
+//(y,x)칸에 블록이 있다<=>(5*y+x)번 비트가 켜져있다.
+//현재 차례인 사람이 이기면 1, 지면 0 반환.
+char play(int board) {
+	char& ret = cache[board];
+	if (ret != -1) return ret;
+	ret = 0;
+	//모든 수를 고려한다.
+	for (int i = 0; i < moves.size(); ++i)
+		//이번 moves를 놓을 수 있는가를 확인
+		if((board&moves[i])==0)
+			//moves[i]를 둔다. play(board')가 0을 반환하면 이긴다.
+			if (!play(board | moves[i])) {
+				ret = 1;
+				break;
+			}
+	return ret;
+}
